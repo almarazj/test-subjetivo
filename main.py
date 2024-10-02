@@ -1,7 +1,5 @@
 import streamlit as st
-import csv
 import random
-import os
 from pathlib import Path
 import pandas as pd
 
