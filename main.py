@@ -4,7 +4,7 @@ from pathlib import Path
 import pandas as pd
 
 # Configuración básica
-st.set_page_config(page_title="Audio AB Test", layout="centered")
+st.set_page_config(page_title="Test Subjetivo", layout="centered")
 
 # Inicialización de session_state
 if "comparacion_actual" not in st.session_state:
@@ -13,7 +13,7 @@ if "comparacion_actual" not in st.session_state:
     st.session_state["datos_sujeto"] = {}
 
 # Parámetros
-total_comparaciones = 20
+total_comparaciones = 16
 sistemas = {"wavmark": "wm", "audioseal": "as", "silentcipher": "sc"}
 
 # Selección de los audios
@@ -88,14 +88,15 @@ if st.session_state["comparacion_actual"] > 0:
         # Iniciamos el formulario de comparación
         with st.form(key="dmos_form"):
             st.write(f"Comparación {comparacion_actual} de {total_comparaciones}")
-            st.write(f"Audio original: {audio_prueba.name}")
+            st.write("Audio A")
             play_audio(audio_prueba)
 
             # Audio procesado por un sistema (AB)
             audio_degradado = audio_folder / sistema / f"{abreviatura}_{audio_prueba.name}"
-            st.write(f"Audio procesado por {sistema}")
+            st.write("Audio B")
             play_audio(audio_degradado)
-
+            
+            st.write(f"¿Cómo describirías la degradación percibida en el audio B con respecto al audio A?")
             # Opciones de puntaje DMOS con radio buttons
             opciones = {
                 5: "Degradación inaudible",
@@ -111,7 +112,6 @@ if st.session_state["comparacion_actual"] > 0:
             col1, col2 = st.columns(2)
             with col1:
                 submitted = st.form_submit_button("Atrás", on_click=prev_comparison)
-
             with col2:
                 if comparacion_actual <= total_comparaciones:
                     submitted = st.form_submit_button("Siguiente", on_click=next_comparison)
