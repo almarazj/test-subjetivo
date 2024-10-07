@@ -127,7 +127,7 @@ if st.session_state["comparacion_actual"] > 0:
             with col1:
                 submitted = st.form_submit_button("Atrás", on_click=prev_comparison)
             with col2:
-                if comparacion_actual <= total_comparaciones:
+                if comparacion_actual <= total_comparaciones-1:
                     submitted = st.form_submit_button("Siguiente", on_click=next_comparison)
                 else:
                     submitted = st.form_submit_button("Finalizar", on_click=end_test)
