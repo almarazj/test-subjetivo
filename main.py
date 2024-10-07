@@ -10,7 +10,6 @@ st.set_page_config(page_title="Test Subjetivo", layout="centered")
 
 # Conectar o crear la base de datos SQLite
 conn = st.connection("gsheets", type=GSheetsConnection)
-df = conn.read()
 
 # Función para generar un ID alfanumérico aleatorio
 def generar_id_aleatorio():
