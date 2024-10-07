@@ -1,30 +1,35 @@
 import streamlit as st
 import random
+import string
 from pathlib import Path
 import pandas as pd
-import sqlite3
+from streamlit_gsheets import GSheetsConnection
+
 
 # Configuración básica
 st.set_page_config(page_title="Test Subjetivo", layout="centered")
 
 # Conectar o crear la base de datos SQLite
-conn = sqlite3.connect('test_subjetivo.db')
-cursor = conn.cursor()
+conn = st.connection("gsheets", type=GSheetsConnection)
+df = conn.read()
 
-# Crear la tabla si no existe
-cursor.execute('''
-CREATE TABLE IF NOT EXISTS resultados (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    comparacion INTEGER,
-    sistema TEXT,
-    dmos_score INTEGER,
-    audio_name TEXT,
-    edad INTEGER,
-    experiencia TEXT,
-    genero TEXT
-)
-''')
-conn.commit()
+# Función para generar un ID alfanumérico aleatorio
+def generar_id_aleatorio():
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=4))
+
+# Función para guardar los resultados en Google Sheets
+def guardar_resultados():
+    # Crear una fila con los datos del participante
+    nueva_fila = [
+        id_participante,  # ID generado
+        edad,             # Edad
+        genero,           # Género
+        experiencia,      # Experiencia de escucha
+    ] + resultados  # Puntajes de las comparaciones
+
+    # Añadir la fila a la Google Sheet
+    conn.append_row(nueva_fila)
+    st.success("Resultados guardados correctamente en Google Sheets")
 
 # Inicialización de session_state
 if "comparacion_actual" not in st.session_state:
@@ -44,36 +49,18 @@ audios_originales = list((audio_folder / "original").glob("*.wav"))
 def play_audio(audio_path):
     st.audio(str(audio_path))
 
-# Función para guardar resultados en session_state y SQLite
-def guardar_resultado(comparacion, sistema, dmos_score, audio_name):
-    # Guardar en session_state (opcional)
-    st.session_state["resultados"].append({
-        "comparacion": comparacion,
-        "sistema": sistema,
-        "dmos_score": dmos_score,
-        "audio_name": audio_name
-    })
-
-    # Guardar en la base de datos SQLite
-    cursor.execute('''
-    INSERT INTO resultados (comparacion, sistema, dmos_score, audio_name, edad, experiencia, genero)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-    ''', (comparacion, sistema, dmos_score, audio_name, 
-          st.session_state["datos_sujeto"]["edad"], 
-          st.session_state["datos_sujeto"]["experiencia"], 
-          st.session_state["datos_sujeto"]["genero"]))
-    conn.commit()
-
 def start_test():
     st.session_state["datos_sujeto"] = {
         "edad": edad,
         "experiencia": experiencia,
-        "genero": genero
+        "genero": genero,
+        "id_participante": id_participante
     }
     # Limpiar los inputs del formulario
     st.session_state["comparacion_actual"] += 1
     
 def next_comparison():
+    st.session_state["resultados"].append(dmos_score)
     st.session_state["comparacion_actual"] += 1
     
 def prev_comparison():
@@ -82,9 +69,8 @@ def prev_comparison():
 
 def end_test():
     # Guardamos el resultado de esta comparación
-    guardar_resultado(comparacion_actual, abreviatura, dmos_score, audio_prueba.name)
-
-    # Avanzamos a la siguiente comparación
+    guardar_resultados()
+    # Avanzamos a la pantalla de agradecimiento
     st.session_state["comparacion_actual"] += 1
 
 def new_test():
@@ -101,16 +87,15 @@ if st.session_state["comparacion_actual"] == 0:
         edad = st.number_input("Edad:", min_value=0, max_value=120)
         experiencia = st.selectbox("Experiencia de escucha:", ["Escucho música regularmente", "Trabajo en algo relacionado con la música", "No suelo escuchar música"])
         genero = st.selectbox("Género:", ["Masculino", "Femenino", "Otro"])
+        id_participante = generar_id_aleatorio()
         
         submitted = st.form_submit_button("Comenzar test", on_click=start_test)
-            # Guardar datos del sujeto en session_state
 
 
 # Si el usuario está en la primera comparación o en cualquier comparación posterior
 if st.session_state["comparacion_actual"] > 0:
     comparacion_actual = st.session_state["comparacion_actual"]
 
-    # Si todas las comparaciones han terminado
     if comparacion_actual <= total_comparaciones:
         # Seleccionamos un audio y un sistema aleatorio
         audio_prueba = random.choice(audios_originales)
@@ -150,10 +135,8 @@ if st.session_state["comparacion_actual"] > 0:
                     submitted = st.form_submit_button("Finalizar", on_click=end_test)
             
     else:
+        resultados = st.session_state["resultados"]
         st.write("¡Prueba finalizada! Gracias por participar.")
-        # Mostrar los resultados almacenados en la base de datos
-        resultados = pd.read_sql('SELECT * FROM resultados', conn)
-        st.dataframe(resultados)
 
         # Limpiar el estado para una nueva sesión (opcional)
         submitted = st.button("Comenzar una nueva prueba", on_click=new_test)
