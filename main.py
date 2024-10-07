@@ -2,9 +2,29 @@ import streamlit as st
 import random
 from pathlib import Path
 import pandas as pd
+import sqlite3
 
 # Configuración básica
 st.set_page_config(page_title="Test Subjetivo", layout="centered")
+
+# Conectar o crear la base de datos SQLite
+conn = sqlite3.connect('test_subjetivo.db')
+cursor = conn.cursor()
+
+# Crear la tabla si no existe
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS resultados (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    comparacion INTEGER,
+    sistema TEXT,
+    dmos_score INTEGER,
+    audio_name TEXT,
+    edad INTEGER,
+    experiencia TEXT,
+    genero TEXT
+)
+''')
+conn.commit()
 
 # Inicialización de session_state
 if "comparacion_actual" not in st.session_state:
@@ -24,14 +44,25 @@ audios_originales = list((audio_folder / "original").glob("*.wav"))
 def play_audio(audio_path):
     st.audio(str(audio_path))
 
-# Función para guardar resultados
+# Función para guardar resultados en session_state y SQLite
 def guardar_resultado(comparacion, sistema, dmos_score, audio_name):
+    # Guardar en session_state (opcional)
     st.session_state["resultados"].append({
         "comparacion": comparacion,
         "sistema": sistema,
         "dmos_score": dmos_score,
         "audio_name": audio_name
     })
+
+    # Guardar en la base de datos SQLite
+    cursor.execute('''
+    INSERT INTO resultados (comparacion, sistema, dmos_score, audio_name, edad, experiencia, genero)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''', (comparacion, sistema, dmos_score, audio_name, 
+          st.session_state["datos_sujeto"]["edad"], 
+          st.session_state["datos_sujeto"]["experiencia"], 
+          st.session_state["datos_sujeto"]["genero"]))
+    conn.commit()
 
 def start_test():
     st.session_state["datos_sujeto"] = {
@@ -120,9 +151,9 @@ if st.session_state["comparacion_actual"] > 0:
             
     else:
         st.write("¡Prueba finalizada! Gracias por participar.")
-        # Guardar todos los resultados o exportarlos a un CSV
-        resultados_df = pd.DataFrame(st.session_state["resultados"])
-        resultados_df.to_csv("results/results.csv", index=False)
+        # Mostrar los resultados almacenados en la base de datos
+        resultados = pd.read_sql('SELECT * FROM resultados', conn)
+        st.dataframe(resultados)
 
         # Limpiar el estado para una nueva sesión (opcional)
         submitted = st.button("Comenzar una nueva prueba", on_click=new_test)
