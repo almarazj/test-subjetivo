@@ -2,42 +2,41 @@ import streamlit as st
 import random
 import string
 from pathlib import Path
-from streamlit_gsheets import GSheetsConnection
+from pymongo import MongoClient
 
-def _get_session():
-    from streamlit.runtime import get_instance
-    from streamlit.runtime.scriptrunner import get_script_run_ctx
-    runtime = get_instance()
-    session_id = get_script_run_ctx().session_id
-    session_info = runtime._session_mgr.get_session_info(session_id)
-    if session_info is None:
-        raise RuntimeError("Couldn't get your Streamlit Session object.")
-    return session_info.session
+MONGO_URI = f"mongodb+srv://{st.secrets['db_username']}:{st.secrets['db_pswd']}@{st.secrets['cluster_name']}.j8rqe.mongodb.net/?retryWrites=true&w=majority&appName=test-subjetivo"
+client = MongoClient(MONGO_URI)
+
+
+db = client["results_db"]
+collection = db["results_collection"]
+
+def generar_id_participante():
+    # Genera un string aleatorio de 4 caracteres alfanuméricos
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=4))
 
 # Configuración básica
 st.set_page_config(page_title="Test Subjetivo", layout="centered")
 
-# Conectar o crear la base de datos SQLite
-conn = st.connection("gsheets", type=GSheetsConnection)
-
 # Función para guardar los resultados en Google Sheets
 def guardar_resultados():
-    
-    id_participante = _get_session()
+    id_participante = generar_id_participante()
     edad = st.session_state.age
     genero = st.session_state.gender
     experiencia = st.session_state.exp
-    # Crear una fila con los datos del participante
-    nueva_fila = [
-        id_participante,  # ID generado
-        edad,             # Edad
-        genero,           # Género
-        experiencia,      # Experiencia de escucha
-    ] + resultados  # Puntajes de las comparaciones
+    resultados = st.session_state.resultados  # Puntajes de las comparaciones
+    
+    nuevo_documento = {
+        "id_participante": id_participante,  # ID generado
+        "edad": edad,             # Edad
+        "genero": genero,           # Género
+        "experiencia": experiencia,      # Experiencia de escucha
+        "resultados": resultados
+    } # Puntajes de las comparaciones
 
-    # Añadir la fila a la Google Sheet
-    conn.append_row(nueva_fila)
-    st.success("Resultados guardados correctamente en Google Sheets")
+    collection.insert_one(nuevo_documento)
+    st.success("Resultados guardados correctamente en la base de datos.")
+
 
 # Inicialización de session_state
 if "comparacion_actual" not in st.session_state:
@@ -57,6 +56,9 @@ def play_audio(audio_path):
     st.audio(str(audio_path))
 
 def start_test():
+    st.session_state.age = edad
+    st.session_state.gender = genero
+    st.session_state.exp = experiencia
     # Limpiar los inputs del formulario
     st.session_state["comparacion_actual"] += 1
     
@@ -84,9 +86,9 @@ st.title("Test de Calidad de Audio - DMOS")
 # Datos del sujeto
 if st.session_state["comparacion_actual"] == 0:
     with st.form(key="datos_sujeto_form"):
-        edad = st.number_input("Edad:", min_value=0, max_value=120, key='age')
-        experiencia = st.selectbox("Experiencia de escucha:", ["Escucho música regularmente", "Trabajo en algo relacionado con la música", "No suelo escuchar música"], key='exp')
-        genero = st.selectbox("Género:", ["Masculino", "Femenino", "Otro"], key='gender')
+        edad = st.number_input("Edad:", min_value=0, max_value=120)
+        experiencia = st.selectbox("Experiencia de escucha:", ["Escucho música regularmente", "Trabajo en algo relacionado con la música", "No suelo escuchar música"])
+        genero = st.selectbox("Género:", ["Masculino", "Femenino", "Otro"])
         
         submitted = st.form_submit_button("Comenzar test", on_click=start_test)
 
