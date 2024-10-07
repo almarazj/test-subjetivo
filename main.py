@@ -2,7 +2,6 @@ import streamlit as st
 import random
 import string
 from pathlib import Path
-import pandas as pd
 from streamlit_gsheets import GSheetsConnection
 
 
