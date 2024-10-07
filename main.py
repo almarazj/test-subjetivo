@@ -20,14 +20,13 @@ st.set_page_config(page_title="Test Subjetivo", layout="centered")
 # Conectar o crear la base de datos SQLite
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-# Función para generar un ID alfanumérico aleatorio
-def generar_id_aleatorio():
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=4))
-
 # Función para guardar los resultados en Google Sheets
 def guardar_resultados():
     
     id_participante = _get_session()
+    edad = st.session_state.age
+    genero = st.session_state.gender
+    experiencia = st.session_state.exp
     # Crear una fila con los datos del participante
     nueva_fila = [
         id_participante,  # ID generado
@@ -44,7 +43,6 @@ def guardar_resultados():
 if "comparacion_actual" not in st.session_state:
     st.session_state["comparacion_actual"] = 0
     st.session_state["resultados"] = []
-    st.session_state["datos_sujeto"] = {}
 
 # Parámetros
 total_comparaciones = 16
@@ -59,11 +57,6 @@ def play_audio(audio_path):
     st.audio(str(audio_path))
 
 def start_test():
-    st.session_state["datos_sujeto"] = {
-        "edad": edad,
-        "experiencia": experiencia,
-        "genero": genero
-    }
     # Limpiar los inputs del formulario
     st.session_state["comparacion_actual"] += 1
     
@@ -84,7 +77,6 @@ def end_test():
 def new_test():
     st.session_state["comparacion_actual"] = 0
     st.session_state["resultados"] = []
-    st.session_state["datos_sujeto"] = {}
 
 # Título de la aplicación
 st.title("Test de Calidad de Audio - DMOS")
@@ -92,10 +84,9 @@ st.title("Test de Calidad de Audio - DMOS")
 # Datos del sujeto
 if st.session_state["comparacion_actual"] == 0:
     with st.form(key="datos_sujeto_form"):
-        edad = st.number_input("Edad:", min_value=0, max_value=120)
-        experiencia = st.selectbox("Experiencia de escucha:", ["Escucho música regularmente", "Trabajo en algo relacionado con la música", "No suelo escuchar música"])
-        genero = st.selectbox("Género:", ["Masculino", "Femenino", "Otro"])
-        id_participante = generar_id_aleatorio()
+        edad = st.number_input("Edad:", min_value=0, max_value=120, key='age')
+        experiencia = st.selectbox("Experiencia de escucha:", ["Escucho música regularmente", "Trabajo en algo relacionado con la música", "No suelo escuchar música"], key='exp')
+        genero = st.selectbox("Género:", ["Masculino", "Femenino", "Otro"], key='gender')
         
         submitted = st.form_submit_button("Comenzar test", on_click=start_test)
 
