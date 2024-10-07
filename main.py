@@ -4,6 +4,15 @@ import string
 from pathlib import Path
 from streamlit_gsheets import GSheetsConnection
 
+def _get_session():
+    from streamlit.runtime import get_instance
+    from streamlit.runtime.scriptrunner import get_script_run_ctx
+    runtime = get_instance()
+    session_id = get_script_run_ctx().session_id
+    session_info = runtime._session_mgr.get_session_info(session_id)
+    if session_info is None:
+        raise RuntimeError("Couldn't get your Streamlit Session object.")
+    return session_info.session
 
 # Configuración básica
 st.set_page_config(page_title="Test Subjetivo", layout="centered")
@@ -17,6 +26,8 @@ def generar_id_aleatorio():
 
 # Función para guardar los resultados en Google Sheets
 def guardar_resultados():
+    
+    id_participante = _get_session()
     # Crear una fila con los datos del participante
     nueva_fila = [
         id_participante,  # ID generado
@@ -51,8 +62,7 @@ def start_test():
     st.session_state["datos_sujeto"] = {
         "edad": edad,
         "experiencia": experiencia,
-        "genero": genero,
-        "id_participante": id_participante
+        "genero": genero
     }
     # Limpiar los inputs del formulario
     st.session_state["comparacion_actual"] += 1
