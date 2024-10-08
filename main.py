@@ -7,7 +7,6 @@ from pymongo import MongoClient
 MONGO_URI = f"mongodb+srv://{st.secrets['db_username']}:{st.secrets['db_pswd']}@{st.secrets['cluster_name']}.j8rqe.mongodb.net/?retryWrites=true&w=majority&appName=test-subjetivo"
 client = MongoClient(MONGO_URI)
 
-
 db = client["results_db"]
 collection = db["results_collection"]
 
@@ -20,12 +19,6 @@ st.set_page_config(page_title="Test Subjetivo", layout="centered")
 
 # Función para guardar los resultados en Google Sheets
 def guardar_resultados():
-    id_participante = generar_id_participante()
-    edad = st.session_state.age
-    genero = st.session_state.gender
-    experiencia = st.session_state.exp
-    resultados = st.session_state.resultados  # Puntajes de las comparaciones
-    
     nuevo_documento = {
         "id_participante": generar_id_participante(),  # ID generado
         "edad": st.session_state.age,             # Edad
@@ -88,7 +81,6 @@ if st.session_state["comparacion_actual"] == 0:
         st.session_state.gender = st.selectbox("Género:", ["Masculino", "Femenino", "Otro"])
         
         submitted = st.form_submit_button("Comenzar test", on_click=start_test)
-
 
 # Si el usuario está en la primera comparación o en cualquier comparación posterior
 if st.session_state["comparacion_actual"] > 0:
