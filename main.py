@@ -35,6 +35,7 @@ def guardar_resultados():
 if "comparacion_actual" not in st.session_state:
     st.session_state["comparacion_actual"] = 0
     st.session_state["resultados"] = []
+    st.session_state["current_dmos_score"] = 5
 
 # Parámetros
 total_comparaciones = 16
@@ -47,12 +48,12 @@ audios_originales = list((audio_folder / "original").glob("*.wav"))
 # Función para reproducir audios
 def play_audio(audio_path):
     st.audio(str(audio_path))
-
-def start_test():
-    # Limpiar los inputs del formulario
-    st.session_state["comparacion_actual"] += 1
     
+def start_test():
+    st.session_state["comparacion_actual"] += 1 
+       
 def next_comparison():
+    dmos_score = st.session_state["current_dmos_score"]
     st.session_state["resultados"].append(dmos_score)
     st.session_state["comparacion_actual"] += 1
     
@@ -61,6 +62,8 @@ def prev_comparison():
     st.session_state["resultados"].pop()  # Eliminar el último resultado guardado si se vuelve atrás
 
 def end_test():
+    dmos_score = st.session_state["current_dmos_score"]
+    st.session_state["resultados"].append(dmos_score)
     # Guardamos el resultado de esta comparación
     guardar_resultados()
     # Avanzamos a la pantalla de agradecimiento
@@ -69,6 +72,9 @@ def end_test():
 def new_test():
     st.session_state["comparacion_actual"] = 0
     st.session_state["resultados"] = []
+    
+def set_dmos():
+    return
 
 # Título de la aplicación
 st.title("Test de Calidad de Audio - DMOS")
@@ -81,7 +87,7 @@ if st.session_state["comparacion_actual"] == 0:
         st.session_state.gender = st.selectbox("Género:", ["Masculino", "Femenino", "Otro"])
         
         submitted = st.form_submit_button("Comenzar test", on_click=start_test)
-
+        
 # Si el usuario está en la primera comparación o en cualquier comparación posterior
 if st.session_state["comparacion_actual"] > 0:
     comparacion_actual = st.session_state["comparacion_actual"]
@@ -112,8 +118,8 @@ if st.session_state["comparacion_actual"] > 0:
                 1: "Degradación muy molesta"
             }
 
-            dmos_score = st.radio("Calidad percibida", list(opciones.keys()), format_func=lambda x: opciones[x], key=f"dmos_{comparacion_actual}")
-
+            dmos_score = st.radio("Calidad percibida", list(opciones.keys()), format_func=lambda x: opciones[x], key=f"dmos_{comparacion_actual}", index=None)
+            st.session_state["current_dmos_score"] = dmos_score
             # Botones "Volver atrás" y "Siguiente" o "Finalizar" en la última comparación
             col1, col2 = st.columns(2)
             with col1:
@@ -125,7 +131,6 @@ if st.session_state["comparacion_actual"] > 0:
                     submitted = st.form_submit_button("Finalizar", on_click=end_test)
             
     else:
-        resultados = st.session_state["resultados"]
         st.write("¡Prueba finalizada! Gracias por participar.")
 
         # Limpiar el estado para una nueva sesión (opcional)
