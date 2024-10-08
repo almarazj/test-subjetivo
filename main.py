@@ -14,7 +14,18 @@ collection = db["results_collection"]
 total_comparaciones = 16
 
 # Configuración básica
-st.set_page_config(page_title="Test Subjetivo", layout="centered")
+if "center" not in st.session_state:
+    layout = "centered"
+else:
+    layout = "wide" if st.session_state.center else "centered"
+
+st.set_page_config(page_title="Test Subjetivo", page_icon=":loud_sound:", layout=layout)
+
+st.checkbox(
+    "¿Estás usando un teléfono?", key="center", value=st.session_state.get("center", False)
+)
+
+
 # Inicialización de session_state
 if "pagina_actual" not in st.session_state:
     st.session_state["pagina_actual"] = "registro"
@@ -51,6 +62,9 @@ if "pagina_actual" not in st.session_state:
 # Función para reproducir audios
 def play_audio(audio_path):
     st.audio(str(audio_path))
+
+
+
 
 # Título de la aplicación
 st.title("Test de degradación de la calidad de audio")
