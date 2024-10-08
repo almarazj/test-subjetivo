@@ -137,13 +137,7 @@ if st.session_state["pagina_actual"] == "comparaciones":
             
             # O puedes añadir un poco más de espacio
             st.write("\n\n")
-        
-        # Botones "Volver atrás" y "Siguiente" o "Finalizar" en la última comparación
-        submitted = st.form_submit_button("Atrás")
-        if submitted:
-            st.session_state["pagina_actual"] = "registro"
-            st.rerun()
-            
+        # Finalizar test
         submitted = st.form_submit_button("Finalizar")
         if submitted:
             resultados_dict = {}
