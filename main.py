@@ -27,11 +27,11 @@ def guardar_resultados():
     resultados = st.session_state.resultados  # Puntajes de las comparaciones
     
     nuevo_documento = {
-        "id_participante": id_participante,  # ID generado
-        "edad": edad,             # Edad
-        "genero": genero,           # Género
-        "experiencia": experiencia,      # Experiencia de escucha
-        "resultados": resultados
+        "id_participante": generar_id_participante(),  # ID generado
+        "edad": st.session_state.age,             # Edad
+        "genero": st.session_state.gender,           # Género
+        "experiencia": st.session_state.exp,      # Experiencia de escucha
+        "resultados": st.session_state.resultados
     } # Puntajes de las comparaciones
 
     collection.insert_one(nuevo_documento)
@@ -56,9 +56,6 @@ def play_audio(audio_path):
     st.audio(str(audio_path))
 
 def start_test():
-    st.session_state.age = edad
-    st.session_state.gender = genero
-    st.session_state.exp = experiencia
     # Limpiar los inputs del formulario
     st.session_state["comparacion_actual"] += 1
     
@@ -86,9 +83,9 @@ st.title("Test de Calidad de Audio - DMOS")
 # Datos del sujeto
 if st.session_state["comparacion_actual"] == 0:
     with st.form(key="datos_sujeto_form"):
-        edad = st.number_input("Edad:", min_value=0, max_value=120)
-        experiencia = st.selectbox("Experiencia de escucha:", ["Escucho música regularmente", "Trabajo en algo relacionado con la música", "No suelo escuchar música"])
-        genero = st.selectbox("Género:", ["Masculino", "Femenino", "Otro"])
+        st.session_state.age = st.number_input("Edad:", min_value=0, max_value=120)
+        st.session_state.exp = st.selectbox("Experiencia de escucha:", ["Escucho música regularmente", "Trabajo en algo relacionado con la música", "No suelo escuchar música"])
+        st.session_state.gender = st.selectbox("Género:", ["Masculino", "Femenino", "Otro"])
         
         submitted = st.form_submit_button("Comenzar test", on_click=start_test)
 
