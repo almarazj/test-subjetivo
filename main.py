@@ -118,7 +118,7 @@ if st.session_state["comparacion_actual"] > 0:
                 1: "Degradación muy molesta"
             }
 
-            dmos_score = st.radio("Calidad percibida", list(opciones.keys()), key=f"dmos_{comparacion_actual}", index=None)
+            dmos_score = st.radio("Calidad percibida", list(opciones.keys()), format_func=lambda x: opciones[x], key=f"dmos_{comparacion_actual}", index=None)
             st.session_state["current_dmos_score"] = dmos_score
             # Botones "Volver atrás" y "Siguiente" o "Finalizar" en la última comparación
             col1, col2 = st.columns(2)
