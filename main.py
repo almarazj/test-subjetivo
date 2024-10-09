@@ -4,6 +4,7 @@ import string
 from pathlib import Path
 from pymongo import MongoClient
 
+# Database using mongodb
 MONGO_URI = f"mongodb+srv://{st.secrets['db_username']}:{st.secrets['db_pswd']}@{st.secrets['cluster_name']}.j8rqe.mongodb.net/?retryWrites=true&w=majority&appName=test-subjetivo"
 client = MongoClient(MONGO_URI)
 
@@ -13,7 +14,7 @@ collection = db["results_collection"]
 # Parámetros
 total_comparaciones = 16
 
-# Configuración básica
+# Checkbox for mobile users
 if "center" not in st.session_state:
     layout = "centered"
 else:
@@ -34,7 +35,7 @@ if "pagina_actual" not in st.session_state:
     # Generar una lista con las comparaciones a realizar en orden aleatorio
     audio_folder = Path("data/audio_samples/")
     audios_originales = list((audio_folder / "original").glob("*.wav"))
-    
+    cal_file = Path("data/audio_samples/calibration/cal.wav")
     # Carpetas con los sistemas de procesamiento
     sistemas = {
         "as": audio_folder / "audioseal",
@@ -58,13 +59,11 @@ if "pagina_actual" not in st.session_state:
                 
     random.shuffle(comparaciones)            
     st.session_state["comparaciones"] = comparaciones
+    st.session_state.cal = cal_file
 
 # Función para reproducir audios
 def play_audio(audio_path):
     st.audio(str(audio_path))
-
-
-
 
 # Título de la aplicación
 st.title("Test de degradación de la calidad de audio")
@@ -84,6 +83,10 @@ if st.session_state["pagina_actual"] == "registro":
     )
     with st.form(key="datos_sujeto_form"):
         age = st.number_input("Edad:", min_value=10, max_value=90, value=None, placeholder="Ingresá tu edad")
+        gender = st.selectbox("Género:",
+                        ["Masculino", "Femenino", "Otro"],
+                        index=None,
+                        placeholder="Seleccioná tu género")
         exp = st.selectbox("Experiencia de escucha:",
                            ["Trabajo/estudio algo relacionado con la música", "Escucho música regularmente", "No suelo escuchar música"],
                            index=None,
@@ -92,10 +95,6 @@ if st.session_state["pagina_actual"] == "registro":
                             ["Auriculares in-ear", "Auriculares over-ear", "Altoparlantes (PC, laptop o smartphone)"],
                             index=None,
                             placeholder="Seleccioná tu sistema de escucha")
-        gender = st.selectbox("Género:",
-                              ["Masculino", "Femenino", "Otro"],
-                              index=None,
-                              placeholder="Seleccioná tu género")
         
         submitted = st.form_submit_button("Comenzar test")
         if submitted:
@@ -104,10 +103,21 @@ if st.session_state["pagina_actual"] == "registro":
                 st.session_state.exp = exp
                 st.session_state.sist = sist
                 st.session_state.gender = gender
-                st.session_state["pagina_actual"] = "comparaciones"
+                st.session_state["pagina_actual"] = "calibracion"
                 st.rerun()
             else:
                 st.error("Falta algún dato del formulario")
+
+if st.session_state["pagina_actual"] == "calibracion":
+    
+    with st.form(key="cal_form"):
+        st.subheader("Calibración", divider=True)
+        st.write("Reproducí el siguiente audio y ajustá el volumen de tu dispositivo según tu preferencia, de manera que puedas escuchar cómodamente. Al finalizar presioná el boton 'Comenzar Test' y no modifiques el volumen hasta finalizar la prueba.")
+        play_audio(st.session_state.cal)    
+        submitted = st.form_submit_button("Comenzar Test")
+        if submitted:
+            st.session_state["pagina_actual"] = "comparaciones"
+            st.rerun()
 
 # Comienzo del test
 if st.session_state["pagina_actual"] == "comparaciones":
