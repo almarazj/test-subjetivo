@@ -22,7 +22,7 @@ else:
 st.set_page_config(page_title="Test Subjetivo", page_icon=":loud_sound:", layout=layout)
 
 st.checkbox(
-    "¿Estás usando un teléfono?", key="center", value=st.session_state.get("center", False)
+    "¿Estás usando un teléfono?", key="center", value=st.session_state.get("center", False), help="Chequeá la casilla si el contenido se ve muy angosto en tu pantalla."
 )
 
 
