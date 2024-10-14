@@ -74,7 +74,7 @@ if st.session_state["pagina_actual"] == "registro":
     st.write(
     """
     ¡Hola! Antes que nada muchas gracias por participar. A continuación se encuentra una prueba subjetiva con una duración estimada de 6 minutos. 
-    En la siguiente pantalla tendrás que realizar comparaciones entre dos audios: el primero será el original y el segundo un audio procesado. 
+    Tendrás que realizar comparaciones entre dos audios: el primero será el original y el segundo un audio procesado. 
     Tu tarea será indicar qué tan degradado te parece el segundo audio con respecto al original, utilizando la escala presentada.
 
     Por favor, ubicate en un lugar tranquilo y usá auriculares de ser posible. 
@@ -88,15 +88,15 @@ if st.session_state["pagina_actual"] == "registro":
                         index=None,
                         placeholder="Seleccioná tu género")
         exp = st.selectbox("Experiencia de escucha:",
-                           ["Trabajo/estudio algo relacionado con la música", "Escucho música regularmente", "No suelo escuchar música"],
+                           ["Trabajo/estudio relacionado a la música", "Escucho música regularmente", "No suelo escuchar música"],
                            index=None,
                            placeholder="Seleccioná la opción con la que te identifiques")
         sist = st.selectbox("Sistema de escucha:",
-                            ["Auriculares in-ear", "Auriculares over-ear", "Altoparlantes (PC, laptop o smartphone)"],
+                            ["Auriculares in-ear [Recomendado]", "Auriculares over-ear [Recomendado]", "Altoparlantes (PC, laptop o smartphone)"],
                             index=None,
                             placeholder="Seleccioná tu sistema de escucha")
         
-        submitted = st.form_submit_button("Comenzar test")
+        submitted = st.form_submit_button("Continuar")
         if submitted:
             if None not in (age, exp, sist, gender):
                 st.session_state.age = age
@@ -112,7 +112,7 @@ if st.session_state["pagina_actual"] == "calibracion":
     
     with st.form(key="cal_form"):
         st.subheader("Calibración", divider=True)
-        st.write("Reproducí el siguiente audio y ajustá el volumen de tu dispositivo según tu preferencia, de manera que puedas escuchar cómodamente. Al finalizar presioná el boton 'Comenzar Test' y no modifiques el volumen hasta finalizar la prueba.")
+        st.write("Antes de continuar, reproducí el siguiente audio y ajustá el volumen de tu dispositivo según tu preferencia, de manera que puedas escuchar cómodamente. Al finalizar presioná el boton 'Comenzar Test' y no modifiques el volumen hasta finalizar la prueba.")
         play_audio(st.session_state.cal)    
         submitted = st.form_submit_button("Comenzar Test")
         if submitted:
@@ -121,7 +121,7 @@ if st.session_state["pagina_actual"] == "calibracion":
 
 # Comienzo del test
 if st.session_state["pagina_actual"] == "comparaciones":
-    
+    st.write("Todo listo! Por favor escuchá una única vez cada audio y elegí una respuesta en base a las diferencias que percibiste. Si no notas diferencia alguna podes indicar que la degradación es inaudible.")
     # Iniciamos el formulario de comparación
     with st.form(key="dmos_form"):
         for i in range(total_comparaciones):
